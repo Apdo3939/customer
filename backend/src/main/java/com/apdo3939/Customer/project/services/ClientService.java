@@ -1,5 +1,88 @@
 package com.apdo3939.Customer.project.services;
 
+import java.util.Optional;
+
+import javax.persistence.EntityNotFoundException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.apdo3939.Customer.project.dto.ClientDTO;
+import com.apdo3939.Customer.project.entities.Client;
+import com.apdo3939.Customer.project.repositories.ClientRepository;
+import com.apdo3939.Customer.project.resources.exception.DataBaseException;
+import com.apdo3939.Customer.project.resources.exception.ResourceNotFoundException;
+
+@Service
 public class ClientService {
+	
+	@Autowired
+	private ClientRepository repository;
+	
+	private void copyDtoToEntity(ClientDTO dto, Client entity) {
+		
+		entity.setName(dto.getName());
+		entity.setCpf(dto.getCpf());
+		entity.setIcome(dto.getIcome());
+		entity.setBirthDate(dto.getBirthDate());
+		entity.setChildern(dto.getChildern());
+		
+	}
+
+	@Transactional(readOnly = true)
+	public Page<ClientDTO> findAllPaged(PageRequest pageRequest) {
+
+		Page<Client> list = repository.findAll(pageRequest);
+		return list.map(x -> new ClientDTO(x));
+
+	}
+
+	@Transactional(readOnly = true)
+	public ClientDTO findById(Long id) {
+		Optional<Client> obj = repository.findById(id);
+		Client entity = obj.orElseThrow(() -> new ResourceNotFoundException("Entity not found"));
+		return new ClientDTO(entity);
+	}
+
+	@Transactional
+	public ClientDTO insert(ClientDTO dto) {
+		Client entity = new Client();
+		copyDtoToEntity(dto, entity);
+		entity = repository.save(entity);
+		return new ClientDTO(entity);
+	}
+
+	@Transactional
+	public ClientDTO update(Long id, ClientDTO dto) {
+		try {
+			Client entity = repository.getOne(id);
+			copyDtoToEntity(dto, entity);
+			entity = repository.save(entity);
+			return new ClientDTO(entity);
+
+		} catch (EntityNotFoundException e) {
+			e.getMessage();
+			throw new ResourceNotFoundException("Id not found " + id);
+		}
+	}
+
+	public void delete(Long id) {
+		try {
+			repository.deleteById(id);
+			
+		} catch (EmptyResultDataAccessException e) {
+			e.getMessage();
+			throw new ResourceNotFoundException("Id not found " + id);
+			
+		} catch (DataIntegrityViolationException e) {
+			e.getMessage();
+			throw new DataBaseException("Integrety Violation " + id);
+		}
+	}
 
 }
