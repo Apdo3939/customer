@@ -28,9 +28,9 @@ public class ClientService {
 		
 		entity.setName(dto.getName());
 		entity.setCpf(dto.getCpf());
-		entity.setIcome(dto.getIcome());
+		entity.setIncome(dto.getIncome());
 		entity.setBirthDate(dto.getBirthDate());
-		entity.setChildern(dto.getChildern());
+		entity.setChildren(dto.getChildren());
 		
 	}
 
